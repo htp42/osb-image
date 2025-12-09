@@ -87,6 +87,49 @@ For S3 backup functionality, add these variables:
 | `pocketbase` | PocketBase backend | 8090 |
 | `neo4j-backup` | Database backup service | - |
 
+## Backup
+
+### Manual Backup
+
+To run a backup manually from the host:
+
+1. **Stop the database container** (required for consistent backup):
+   ```bash
+   docker compose stop database
+   ```
+
+2. **Run the backup script**:
+   ```bash
+   docker compose exec neo4j-backup sh /backup/backup.sh
+   ```
+
+3. **Start the database container**:
+   ```bash
+   docker compose start database
+   ```
+
+### Automated Backup with Cron
+
+To schedule daily backups at 6:15 PM (after stopping the database at 6:00 PM), add these entries to your crontab:
+
+```bash
+crontab -e
+```
+
+Add the following lines:
+
+```cron
+# Stop Neo4j database at 6:00 PM
+0 18 * * * cd /path/to/osb-image && docker compose stop database
+
+# Run backup at 6:15 PM
+15 18 * * * cd /path/to/osb-image && docker compose exec neo4j-backup sh /backup/backup.sh && docker compose start database
+```
+
+Replace `/path/to/osb-image` with the actual path to your project directory.
+
+> **Note:** Ensure AWS credentials (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `S3_BUCKET`) are configured in your `.env` file for S3 backups to work.
+
 ## Troubleshooting
 
 ### Services not starting
